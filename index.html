@@ -25,6 +25,7 @@
     </div>
 
     <script>
+        // Función para mostrar mensajes de advertencia y error
         function unityShowBanner(msg, type) {
             const warningBanner = document.getElementById("unity-warning");
             function updateBannerVisibility() {
@@ -44,22 +45,28 @@
             updateBannerVisibility();
         }
 
+        // Función para configurar la cámara
         function setupCamera() {
+            const canvas = document.getElementById('unity-canvas');
+            if (!canvas) {
+                unityShowBanner("El canvas no se encontró.", 'error');
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                unityShowBanner("No se pudo obtener el contexto del canvas.", 'error');
+                return;
+            }
+
             return navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
                 .then(function(stream) {
                     console.log("Acceso a la cámara trasera concedido");
                     const video = document.createElement('video');
                     video.autoplay = true;
-                    video.width = 960;  // Ajusta según el tamaño del canvas
-                    video.height = 600;
+                    video.width = canvas.width;  // Asegúrate de que las dimensiones coincidan
+                    video.height = canvas.height;
                     video.srcObject = stream;
-
-                    const canvas = document.getElementById('unity-canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    if (!ctx) {
-                        throw new Error("No se pudo obtener el contexto del canvas.");
-                    }
 
                     function drawFrame() {
                         if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -76,6 +83,7 @@
                 });
         }
 
+        // Función para cargar Unity
         function loadUnity() {
             const container = document.querySelector("#unity-container");
             const canvas = document.querySelector("#unity-canvas");
@@ -132,7 +140,8 @@
             document.body.appendChild(script);
         }
 
-        loadUnity();
+        // Asegúrate de que el canvas esté listo antes de cargar Unity
+        window.onload = loadUnity;
     </script>
 </body>
 </html>
