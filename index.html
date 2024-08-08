@@ -25,33 +25,6 @@
     </div>
 
     <script>
-        async function setupCamera() {
-            try {
-                const video = document.createElement('video');
-                video.autoplay = true;
-                video.width = 960;  // Ajusta según el tamaño del canvas
-                video.height = 600;
-
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-
-                document.body.appendChild(video);
-                
-                const canvas = document.getElementById('unity-canvas');
-                const ctx = canvas.getContext('2d');
-
-                function drawFrame() {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    requestAnimationFrame(drawFrame);
-                }
-
-                drawFrame();
-            } catch (err) {
-                console.error("Error al acceder a la cámara: " + err);
-                unityShowBanner("Error al acceder a la cámara: " + err, 'error');
-            }
-        }
-
         function unityShowBanner(msg, type) {
             const warningBanner = document.getElementById("unity-warning");
             function updateBannerVisibility() {
@@ -71,13 +44,38 @@
             updateBannerVisibility();
         }
 
-        setupCamera().then(() => {
+        function setupCamera() {
+            return navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function(stream) {
+                    console.log("Acceso a la cámara trasera concedido");
+                    const video = document.createElement('video');
+                    video.autoplay = true;
+                    video.width = 960;  // Ajusta según el tamaño del canvas
+                    video.height = 600;
+                    video.srcObject = stream;
+
+                    const canvas = document.getElementById('unity-canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    function drawFrame() {
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        requestAnimationFrame(drawFrame);
+                    }
+
+                    drawFrame();
+                })
+                .catch(function(err) {
+                    console.error("Error al acceder a la cámara: " + err);
+                    unityShowBanner("Error al acceder a la cámara: " + err, 'error');
+                });
+        }
+
+        function loadUnity() {
             const container = document.querySelector("#unity-container");
             const canvas = document.querySelector("#unity-canvas");
             const loadingBar = document.querySelector("#unity-loading-bar");
             const progressBarFull = document.querySelector("#unity-progress-bar-full");
             const fullscreenButton = document.querySelector("#unity-fullscreen-button");
-            const warningBanner = document.querySelector("#unity-warning");
 
             const buildUrl = "Build";
             const loaderUrl = buildUrl + "/ios.loader.js";
@@ -118,12 +116,17 @@
                     fullscreenButton.onclick = () => {
                         unityInstance.SetFullscreen(1);
                     };
+
+                    // Inicializa la cámara después de cargar Unity
+                    setupCamera();
                 }).catch((message) => {
                     alert(message);
                 });
             };
             document.body.appendChild(script);
-        });
+        }
+
+        loadUnity();
     </script>
 </body>
 </html>
