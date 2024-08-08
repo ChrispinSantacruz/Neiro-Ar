@@ -25,36 +25,32 @@
     </div>
 
     <script>
-      // Función para solicitar permisos y acceder a la cámara
-      function setupCamera() {
-        return navigator.mediaDevices.getUserMedia({ video: true })
-          .then(function(stream) {
-            console.log("Acceso a la cámara concedido");
+      async function setupCamera() {
+        try {
+          const video = document.createElement('video');
+          video.autoplay = true;
+          video.width = 960;  // Ajusta según el tamaño del canvas
+          video.height = 600;
 
-            // Crear un elemento video para mostrar el stream de la cámara
-            const video = document.createElement('video');
-            video.autoplay = true;
-            video.width = 960; // Ajustar al tamaño del canvas si es necesario
-            video.height = 600;
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
 
-            video.srcObject = stream;
+          // Agregar el video al DOM para que se pueda ver
+          document.body.appendChild(video);
 
-            // Crear un canvas para dibujar el video
-            const canvas = document.getElementById('unity-canvas');
-            const ctx = canvas.getContext('2d');
+          const canvas = document.getElementById('unity-canvas');
+          const ctx = canvas.getContext('2d');
 
-            // Dibujar el video en el canvas a intervalos
-            function drawFrame() {
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              requestAnimationFrame(drawFrame);
-            }
+          function drawFrame() {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(drawFrame);
+          }
 
-            drawFrame();
-          })
-          .catch(function(err) {
-            console.error("Error al acceder a la cámara: " + err);
-            unityShowBanner("Error al acceder a la cámara: " + err, 'error');
-          });
+          drawFrame();
+        } catch (err) {
+          console.error("Error al acceder a la cámara: " + err);
+          unityShowBanner("Error al acceder a la cámara: " + err, 'error');
+        }
       }
 
       function unityShowBanner(msg, type) {
@@ -64,9 +60,9 @@
         var div = document.createElement('div');
         div.innerHTML = msg;
         warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        if (type === 'error') div.style = 'background: red; padding: 10px;';
         else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          if (type === 'warning') div.style = 'background: yellow; padding: 10px;';
           setTimeout(function() {
             warningBanner.removeChild(div);
             updateBannerVisibility();
